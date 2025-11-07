@@ -1,0 +1,42 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  bot
+  client
+}
+
+model User {
+  id          String         @id @default(cuid())
+  email       String         @unique
+  name        String?
+  password    String
+  sessions    ChatSession[]
+}
+
+model ChatSession {
+  id          String         @id @default(cuid())
+  title       String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  userId      String
+  user        User           @relation(fields: [userId], references: [id])
+  messages    Message[]
+  modelUsed   String?        // e.g. "gpt-4", "gpt-5" (optional)
+}
+
+model Message {
+  id          String         @id @default(cuid())
+  sessionId   String
+  role        Role
+  content     String
+  createdAt   DateTime       @default(now())
+  session     ChatSession    @relation(fields: [sessionId], references: [id])
+  tokensUsed  Int?           // useful if you track token usage
+}
